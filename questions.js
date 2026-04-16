@@ -1,0 +1,28 @@
+// รวมโจทย์จาก set1.js - set12.js (ไม่ต้องแก้อะไรในไฟล์นี้)
+window.QUESTIONS_BY_SET = {
+  1: window.SET_1 || [],
+  2: window.SET_2 || [],
+  3: window.SET_3 || [],
+  4: window.SET_4 || [],
+  5: window.SET_5 || [],
+  6: window.SET_6 || [],
+  7: window.SET_7 || [],
+  8: window.SET_8 || [],
+  9: window.SET_9 || [],
+  10: window.SET_10 || [],
+  11: window.SET_11 || [],
+  12: window.SET_12 || [],
+  13: window.SET_13 || [],
+  14: window.SET_14 || [],
+  15: window.SET_15 || [],
+  16: window.SET_16 || [],
+  17: window.SET_17 || [],
+  18: window.SET_18 || [],
+  19: window.SET_19 || [],
+  20: window.SET_20 || [],
+  21: window.SET_21 || [],
+  22: window.SET_22 || [],
+  23: window.SET_23 || [],
+  24: window.SET_24 || [],
+  25: window.SET_25 || []
+};

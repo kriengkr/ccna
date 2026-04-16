@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>จำลองข้อสอบ CCNA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg: #f0faf8; --card: #ffffff; --accent: #0d9488; --accent-hover: #14b8a6; --text: #134e4a; --text-muted: #5b7c78; --correct: #059669; --wrong: #dc2626; --border: #99d4ce; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.6; }
+    .container { max-width: 1480px; margin: 0 auto; padding: 2rem 1.5rem; }
+    header { text-align: center; margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    header h1 { font-size: 1.75rem; font-weight: 700; color: var(--accent); }
+    header p { color: var(--text-muted); font-size: 0.95rem; margin-top: 0.25rem; }
+    .back-link { display: inline-block; margin-bottom: 0.5rem; color: var(--accent); text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { text-decoration: underline; }
+    .stats-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: var(--card); border-radius: 10px; border: 1px solid var(--border); }
+    .stats-bar span { color: var(--text-muted); font-size: 0.9rem; }
+    .stats-bar strong { color: var(--accent); }
+    #questions-container { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+    .question-card { background: var(--card); border-radius: 12px; padding: 1.5rem 1.75rem; margin-bottom: 0; border: 1px solid var(--border); }
+    @media (max-width: 900px) { #questions-container { grid-template-columns: 1fr; } }
+    .question-number { font-size: 0.85rem; color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
+    .question-text { font-size: 1.05rem; margin-bottom: 1.25rem; font-weight: 500; }
+    .question-image { margin: 1rem 0 1.25rem 0; text-align: center; }
+    .question-image img { max-width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .options { display: flex; flex-direction: column; gap: 0.6rem; }
+    .option { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.9rem 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+    .option:hover { border-color: var(--accent); background: rgba(13,148,136,0.06); }
+    .option input { margin-top: 0.2rem; accent-color: var(--accent); width: 18px; height: 18px; flex-shrink: 0; }
+    .option.selected { border-color: var(--accent); background: rgba(13,148,136,0.1); }
+    .option.correct { border-color: var(--correct); background: rgba(5,150,105,0.1); }
+    .option.wrong { border-color: var(--wrong); background: rgba(220,38,38,0.08); }
+    .option input:disabled { cursor: default; }
+    .dd-wrap { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 0.75rem; }
+    @media (min-width: 720px) { .dd-wrap { grid-template-columns: 1fr 1.2fr; align-items: start; } }
+    .dd-col-title { font-size: 0.9rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.5rem; }
+    .dd-pool { display: flex; flex-direction: column; gap: 0.6rem; padding: 0.75rem; background: rgba(13,148,136,0.06); border: 1px dashed var(--border); border-radius: 10px; min-height: 80px; }
+    .dd-item { padding: 0.75rem 0.9rem; border-radius: 8px; background: var(--card); border: 2px solid var(--border); cursor: grab; font-weight: 600; color: var(--text); user-select: none; }
+    .dd-item:active { cursor: grabbing; }
+    .dd-targets { display: flex; flex-direction: column; gap: 0.75rem; }
+    .dd-target { border: 1px solid var(--border); border-radius: 10px; background: var(--card); padding: 0.85rem 0.95rem; }
+    .dd-desc { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.6rem; }
+    .dd-dropzone { border-radius: 8px; border: 2px dashed var(--border); background: rgba(13,148,136,0.03); padding: 0.6rem; min-height: 52px; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .dd-dropzone.dd-over { border-color: var(--accent); background: rgba(13,148,136,0.08); }
+    .dd-placeholder { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+    .dd-dropzone.dd-correct { border-color: var(--correct); background: rgba(5,150,105,0.08); }
+    .dd-dropzone.dd-wrong { border-color: var(--wrong); background: rgba(220,38,38,0.06); }
+    .dd-correct-hint { width: 100%; margin-top: 0.25rem; font-size: 0.85rem; color: var(--text-muted); }
+    .nav-buttons { display: flex; justify-content: space-between; gap: 1rem; margin-top: 1.5rem; }
+    .btn { font-family: inherit; font-size: 0.95rem; font-weight: 600; padding: 0.75rem 1.5rem; border: none; border-radius: 8px; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-secondary { background: var(--border); color: var(--text); }
+    .btn-secondary:hover:not(:disabled) { background: #5b7c78; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .result-panel { background: var(--card); border-radius: 12px; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border); text-align: center; }
+    .result-panel h2 { font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--accent); }
+    .result-panel .score { font-size: 2.5rem; font-weight: 700; color: var(--correct); margin: 0.5rem 0; }
+    .result-panel .summary { color: var(--text-muted); margin-top: 1rem; }
+    .hidden { display: none !important; }
+    .question-dots { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; margin-top: 1rem; }
+    .dot { min-width: 52px; height: 28px; padding: 0 0.45rem; border-radius: 6px; border: 2px solid var(--border); background: var(--card); color: var(--text-muted); font-size: 0.75rem; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
+    .dot:hover { border-color: var(--accent); color: var(--accent); }
+    .dot.answered { border-color: var(--accent); background: rgba(13,148,136,0.15); color: var(--accent); }
+    .dot.current { border-color: var(--accent); background: var(--accent); color: white; }
+    .empty-set { text-align: center; padding: 3rem 2rem; background: var(--card); border-radius: 12px; border: 1px solid var(--border); color: var(--text-muted); }
+    .empty-set p { margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <a href="index.html" class="back-link">← กลับไปเลือกชุดข้อสอบ</a>
+      <h1>จำลองข้อสอบ CCNA <span id="set-title"></span></h1>
+      <p id="header-desc">เลือกคำตอบแล้วกดส่งคำตอบเมื่อทำครบ</p>
+    </header>
+    <div id="empty-area" class="empty-set hidden">
+      <p><strong>ชุดนี้ยังไม่มีโจทย์</strong></p>
+      <p>เดี๋ยวเพิ่มโจทย์ให้ภายหลัง หรือเพิ่มในไฟล์ <code>questions.js</code> ใน QUESTIONS_BY_SET[<span id="empty-set-num"></span>]</p>
+      <a href="index.html" class="btn btn-primary" style="margin-top:1rem;display:inline-block;text-decoration:none">กลับไปเลือกชุด</a>
+    </div>
+    <div id="exam-area">
+      <div class="stats-bar">
+        <span>ข้อที่ <strong id="current-num">1</strong> จาก <strong id="total-num">0</strong></span>
+        <span>ตอบแล้ว <strong id="answered-num">0</strong> ข้อ</span>
+      </div>
+      <div id="questions-container"></div>
+      <div class="nav-buttons">
+        <button type="button" class="btn btn-secondary" id="btn-prev">← ก่อนหน้า</button>
+        <button type="button" class="btn btn-primary" id="btn-next">ถัดไป →</button>
+      </div>
+      <div class="question-dots" id="question-dots"></div>
+      <div style="margin-top: 2rem; text-align: center;">
+        <button type="button" class="btn btn-primary" id="btn-submit">ส่งคำตอบ</button>
+      </div>
+    </div>
+    <div id="result-area" class="result-panel hidden">
+      <h2>ผลคะแนน</h2>
+      <div class="score" id="score-text">0 / 0</div>
+      <p class="summary" id="score-summary"></p>
+      <div id="wrong-area" class="hidden" style="margin-top: 1.5rem; text-align: left;">
+        <div style="font-weight: 700; color: var(--wrong); margin-bottom: 0.5rem;">สรุปข้อที่ตอบผิด</div>
+        <div id="wrong-list" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+      </div>
+      <div id="all-correct-area" class="hidden" style="margin-top: 1.5rem; color: var(--correct); font-weight: 700;">
+        ตอบถูกทุกข้อ
+      </div>
+      <button type="button" class="btn btn-primary" style="margin-top: 1.5rem;" id="btn-retry">ทำอีกครั้ง</button>
+    </div>
+  </div>
+  <script src="set1.js"></script>
+  <script src="set2.js"></script>
+  <script src="set3.js"></script>
+  <script src="set4.js"></script>
+  <script src="set5.js"></script>
+  <script src="set6.js"></script>
+  <script src="set7.js"></script>
+  <script src="set8.js"></script>
+  <script src="set9.js"></script>
+  <script src="set10.js"></script>
+  <script src="set11.js"></script>
+  <script src="set12.js"></script>
+  <script src="set13.js"></script>
+  <script src="set14.js"></script>
+  <script src="set15.js"></script>
+  <script src="set16.js"></script>
+  <script src="set17.js"></script>
+  <script src="set18.js"></script>
+  <script src="set19.js"></script>
+  <script src="set20.js"></script>
+  <script src="set21.js"></script>
+  <script src="set22.js"></script>
+  <script src="set23.js"></script>
+  <script src="set24.js"></script>
+  <script src="set25.js"></script>
+  <script src="questions.js"></script>
+  <script>
+    (function() {
+      var setNum = Math.min(25, Math.max(1, parseInt(new URLSearchParams(location.search).get('set') || '1', 10)));
+      var QUESTIONS = (window.QUESTIONS_BY_SET && window.QUESTIONS_BY_SET[setNum]) ? window.QUESTIONS_BY_SET[setNum].slice() : [];
+
+      document.getElementById('set-title').textContent = '(ชุดที่ ' + setNum + ')';
+      document.getElementById('empty-set-num').textContent = setNum;
+
+      if (!QUESTIONS.length) {
+        document.getElementById('empty-area').classList.remove('hidden');
+        document.getElementById('exam-area').classList.add('hidden');
+        return;
+      }
+
+      var QUESTIONS_PER_PAGE = 2;
+      var currentIndex = 0, userAnswers = {}, submitted = false;
+      var container = document.getElementById('questions-container');
+      var currentNumEl = document.getElementById('current-num');
+      var totalNumEl = document.getElementById('total-num');
+      var answeredNumEl = document.getElementById('answered-num');
+      var btnPrev = document.getElementById('btn-prev');
+      var btnNext = document.getElementById('btn-next');
+      var btnSubmit = document.getElementById('btn-submit');
+      var questionDots = document.getElementById('question-dots');
+      var examArea = document.getElementById('exam-area');
+      var resultArea = document.getElementById('result-area');
+      var scoreText = document.getElementById('score-text');
+      var scoreSummary = document.getElementById('score-summary');
+      var btnRetry = document.getElementById('btn-retry');
+      var wrongArea = document.getElementById('wrong-area');
+      var wrongList = document.getElementById('wrong-list');
+      var allCorrectArea = document.getElementById('all-correct-area');
+
+      function escapeHtml(text) { var d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+      function getQuestionKind(q) { if (q.type === 'dragdrop') return 'dragdrop'; if (Array.isArray(q.answer)) return 'multi'; return 'single'; }
+      function getDragdropState(qIndex, q) { var u = userAnswers[qIndex]; if (!Array.isArray(u) || u.length !== q.targets.length) return Array(q.targets.length).fill(null); return u.slice(); }
+      function toIndexArray(v) { return Array.isArray(v) ? v.slice() : (v !== undefined ? [v] : []); }
+      function formatIndexList(indices, options) {
+        if (!indices || indices.length === 0) return '-';
+        if (!options || !options.length) return indices.map(function(i) { return String(i + 1); }).join(', ');
+        return indices.map(function(i) { return (i + 1) + ') ' + options[i]; }).join(' , ');
+      }
+      function renderWrongItem(i, q) {
+        var kind = getQuestionKind(q);
+        var title = 'ข้อ ' + getQuestionLabel(i);
+        var qText = (kind === 'dragdrop') ? (q.prompt || '') : (q.question || '');
+        var imageHtml = q.image ? '<div style="margin-top:0.5rem;"><img src="' + q.image + '" alt="รูปภาพโจทย์" style="max-width:100%;height:auto;border-radius:8px;border:1px solid var(--border);"></div>' : '';
+        var detailHtml = '';
+        if (kind === 'dragdrop') {
+          var userState = getDragdropState(i, q);
+          var correctState = Array.isArray(q.answer) ? q.answer : [];
+          var lines = q.targets.map(function(desc, t) {
+            var u = userState[t];
+            var c = correctState[t];
+            var uTxt = (u == null) ? '-' : q.terms[u];
+            var cTxt = (c == null) ? '-' : q.terms[c];
+            return '<div style="padding:0.5rem 0.75rem;background:rgba(13,148,136,0.04);border:1px solid var(--border);border-radius:8px;">'
+              + '<div style="font-weight:700;color:var(--text);margin-bottom:0.25rem;">' + escapeHtml(desc) + '</div>'
+              + '<div style="color:var(--wrong);"><strong>ตอบ:</strong> ' + escapeHtml(uTxt) + '</div>'
+              + '<div style="color:var(--correct);"><strong>เฉลย:</strong> ' + escapeHtml(cTxt) + '</div>'
+              + '</div>';
+          }).join('');
+          detailHtml = '<div style="display:flex;flex-direction:column;gap:0.5rem;margin-top:0.6rem;">' + lines + '</div>';
+        } else {
+          var userIdx = toIndexArray(userAnswers[i]).slice().sort(function(a,b){return a-b;});
+          var correctIdx = toIndexArray(q.answer).slice().sort(function(a,b){return a-b;});
+          detailHtml =
+            '<div style="margin-top:0.6rem;">'
+            + '<div style="color:var(--wrong);"><strong>ตอบ:</strong> ' + escapeHtml(formatIndexList(userIdx, q.options)) + '</div>'
+            + '<div style="color:var(--correct);"><strong>เฉลย:</strong> ' + escapeHtml(formatIndexList(correctIdx, q.options)) + '</div>'
+            + '</div>';
+        }
+        return '<div style="padding:0.9rem 1rem;background:var(--card);border:1px solid var(--border);border-left:6px solid var(--wrong);border-radius:10px;">'
+          + '<div style="font-weight:800;color:var(--wrong);">' + escapeHtml(title) + '</div>'
+          + (qText ? '<div style="margin-top:0.25rem;color:var(--text);font-weight:600;">' + escapeHtml(qText) + '</div>' : '')
+          + imageHtml
+          + detailHtml
+          + '</div>';
+      }
+
+      function getPageStart(index) {
+        return Math.floor(index / QUESTIONS_PER_PAGE) * QUESTIONS_PER_PAGE;
+      }
+      function getPageCount() {
+        return Math.ceil(QUESTIONS.length / QUESTIONS_PER_PAGE);
+      }
+      function getQuestionLabel(i) {
+        var q = QUESTIONS[i];
+        return (q && q.id !== undefined && q.id !== null) ? q.id : (i + 1);
+      }
+      function isVisibleOnCurrentPage(i) {
+        return i >= currentIndex && i < currentIndex + QUESTIONS_PER_PAGE;
+      }
+
+      function init() {
+        totalNumEl.textContent = QUESTIONS.length;
+        renderAllQuestions();
+        renderDots();
+        showQuestion(0);
+        updateAnsweredCount();
+      }
+
+      function renderAllQuestions() {
+        container.innerHTML = QUESTIONS.map(function(q, i) {
+          var kind = getQuestionKind(q);
+          var multi = kind === 'multi';
+          var inputType = multi ? 'checkbox' : 'radio';
+          var checked = multi ? function(j) { return (userAnswers[i] || []).indexOf(j) >= 0; } : function(j) { return userAnswers[i] === j; };
+          var bodyHtml;
+          if (kind === 'dragdrop') {
+            var state = getDragdropState(i, q);
+            var assignedSet = {};
+            state.forEach(function(v, idx) { if (v != null) assignedSet[v] = true; });
+            var pool = q.terms.map(function(_, idx) { return idx; }).filter(function(idx) { return !assignedSet[idx]; });
+            var targetsHtml = q.targets.map(function(desc, t) {
+              var assigned = state[t];
+              var correct = Array.isArray(q.answer) ? q.answer[t] : null;
+              var isCorrect = submitted && assigned != null && assigned === correct;
+              var isWrong = submitted && (assigned == null || assigned !== correct);
+              var zoneCls = submitted ? (isCorrect ? 'dd-correct' : (isWrong ? 'dd-wrong' : '')) : '';
+              var assignedHtml = (assigned != null) ? '<div class="dd-item" draggable="' + (submitted ? 'false' : 'true') + '" data-dd-q="' + i + '" data-dd-item="' + assigned + '">' + escapeHtml(q.terms[assigned]) + '</div>' : '<span class="dd-placeholder">วางที่นี่</span>';
+              var hintHtml = (submitted && (assigned == null || assigned !== correct) && correct != null) ? '<div class="dd-correct-hint">เฉลย: ' + escapeHtml(q.terms[correct]) + '</div>' : '';
+              return '<div class="dd-target"><div class="dd-desc">' + escapeHtml(desc) + '</div><div class="dd-dropzone ' + zoneCls + '" data-dd-q="' + i + '" data-dd-dropzone="' + t + '">' + assignedHtml + hintHtml + '</div></div>';
+            }).join('');
+            var poolHtml = pool.map(function(idx) { return '<div class="dd-item" draggable="' + (submitted ? 'false' : 'true') + '" data-dd-q="' + i + '" data-dd-item="' + idx + '">' + escapeHtml(q.terms[idx]) + '</div>'; }).join('') || '<span class="dd-placeholder">ไม่มีคำศัพท์เหลือ</span>';
+            bodyHtml = '<div class="question-text">' + escapeHtml(q.prompt || '') + '</div><div class="dd-wrap"><div><div class="dd-col-title">คำศัพท์ (ลากไปวาง)</div><div class="dd-pool" data-dd-q="' + i + '" data-dd-pool="1">' + poolHtml + '</div></div><div><div class="dd-col-title">คำอธิบาย (ที่วาง)</div><div class="dd-targets">' + targetsHtml + '</div></div></div>';
+          } else {
+            bodyHtml = '<div class="question-text">' + escapeHtml(q.question) + '</div>' + (q.image ? '<div class="question-image"><img src="' + q.image + '" alt="รูปภาพโจทย์"></div>' : '') + '<div class="options">' + q.options.map(function(opt, j) {
+              return '<label class="option" data-option="' + j + '"><input type="' + inputType + '" name="q-' + i + '" value="' + j + '" ' + (checked(j) ? 'checked' : '') + ' ' + (submitted ? 'disabled' : '') + '><span>' + opt + '</span></label>';
+            }).join('') + '</div>';
+          }
+          return '<div class="question-card ' + (isVisibleOnCurrentPage(i) ? '' : 'hidden') + '" data-index="' + i + '" id="q-' + i + '"><div class="question-number">ข้อ ' + getQuestionLabel(i) + '</div>' + bodyHtml + '</div>';
+        }).join('');
+
+        if (!submitted) {
+          QUESTIONS.forEach(function(q, index) {
+            var card = container.querySelector('#q-' + index);
+            if (!card) return;
+            var kind = getQuestionKind(q);
+            if (kind === 'dragdrop') {
+              card.querySelectorAll('.dd-item[draggable="true"]').forEach(function(itemEl) {
+                itemEl.addEventListener('dragstart', function(e) { e.dataTransfer.setData('text/plain', index + ':' + itemEl.getAttribute('data-dd-item')); e.dataTransfer.effectAllowed = 'move'; });
+              });
+              var onDragOver = function(e) { e.preventDefault(); e.currentTarget.classList.add('dd-over'); };
+              var onDragLeave = function(e) { e.currentTarget.classList.remove('dd-over'); };
+              card.querySelectorAll('[data-dd-dropzone]').forEach(function(zone) {
+                zone.addEventListener('dragover', onDragOver);
+                zone.addEventListener('dragleave', onDragLeave);
+                zone.addEventListener('drop', function(e) {
+                  e.preventDefault();
+                  zone.classList.remove('dd-over');
+                  var data = (e.dataTransfer.getData('text/plain') || '').split(':');
+                  var qIdx = parseInt(data[0], 10), itemIdx = parseInt(data[1], 10), targetIdx = parseInt(zone.getAttribute('data-dd-dropzone'), 10);
+                  if (qIdx !== index || isNaN(itemIdx) || isNaN(targetIdx)) return;
+                  var state = getDragdropState(index, q);
+                  var prev = state.indexOf(itemIdx);
+                  if (prev !== -1) state[prev] = null;
+                  state[targetIdx] = itemIdx;
+                  userAnswers[index] = state;
+                  updateAnsweredCount();
+                  renderAllQuestions();
+                  showQuestion(currentIndex);
+                });
+              });
+              var pool = card.querySelector('[data-dd-pool="1"]');
+              if (pool) {
+                pool.addEventListener('dragover', onDragOver);
+                pool.addEventListener('dragleave', onDragLeave);
+                pool.addEventListener('drop', function(e) {
+                  e.preventDefault();
+                  pool.classList.remove('dd-over');
+                  var data = (e.dataTransfer.getData('text/plain') || '').split(':');
+                  var qIdx = parseInt(data[0], 10), itemIdx = parseInt(data[1], 10);
+                  if (qIdx !== index || isNaN(itemIdx)) return;
+                  var state = getDragdropState(index, q);
+                  var prev = state.indexOf(itemIdx);
+                  if (prev !== -1) state[prev] = null;
+                  userAnswers[index] = state;
+                  updateAnsweredCount();
+                  renderAllQuestions();
+                  showQuestion(currentIndex);
+                });
+              }
+            } else {
+              var multi = kind === 'multi';
+              card.querySelectorAll('.option').forEach(function(label) {
+                label.addEventListener('click', function() {
+                  if (multi) {
+                    var ch = [].slice.call(card.querySelectorAll('input:checked')).map(function(el) { return parseInt(el.value, 10); }).sort(function(a,b) { return a - b; });
+                    userAnswers[index] = ch;
+                    card.querySelectorAll('.option').forEach(function(o, j) { o.classList.toggle('selected', ch.indexOf(j) >= 0); });
+                  } else {
+                    userAnswers[index] = parseInt(this.getAttribute('data-option'), 10);
+                    card.querySelectorAll('.option').forEach(function(o) { o.classList.remove('selected'); });
+                    this.classList.add('selected');
+                  }
+                  updateAnsweredCount();
+                  renderDots();
+                });
+              });
+              card.querySelectorAll('input').forEach(function(input) {
+                input.addEventListener('change', function() {
+                  if (multi) {
+                    var ch = [].slice.call(card.querySelectorAll('input:checked')).map(function(el) { return parseInt(el.value, 10); }).sort(function(a,b) { return a - b; });
+                    userAnswers[index] = ch;
+                    card.querySelectorAll('.option').forEach(function(o, j) { o.classList.toggle('selected', ch.indexOf(j) >= 0); });
+                  } else {
+                    userAnswers[index] = parseInt(this.value, 10);
+                    card.querySelectorAll('.option').forEach(function(o) { o.classList.remove('selected'); });
+                    this.closest('.option').classList.add('selected');
+                  }
+                  updateAnsweredCount();
+                  renderDots();
+                });
+              });
+            }
+          });
+        } else {
+          QUESTIONS.forEach(function(q, i) {
+            var card = document.getElementById('q-' + i);
+            if (!card || getQuestionKind(q) === 'dragdrop') return;
+            var u = userAnswers[i], correct = q.answer;
+            var correctSet = {}; (Array.isArray(correct) ? correct : [correct]).forEach(function(j) { correctSet[j] = true; });
+            var userSet = {}; (Array.isArray(u) ? u : (u !== undefined ? [u] : [])).forEach(function(j) { userSet[j] = true; });
+            card.querySelectorAll('.option').forEach(function(opt, j) {
+              if (correctSet[j]) opt.classList.add('correct');
+              else if (userSet[j]) opt.classList.add('wrong');
+              if (userSet[j]) opt.classList.add('selected');
+            });
+          });
+        }
+      }
+
+      function showQuestion(index) {
+        currentIndex = getPageStart(index);
+        var rangeEndIndex = Math.min(currentIndex + QUESTIONS_PER_PAGE - 1, QUESTIONS.length - 1);
+        var startLabel = getQuestionLabel(currentIndex);
+        var endLabel = getQuestionLabel(rangeEndIndex);
+        currentNumEl.textContent = (startLabel === endLabel) ? String(startLabel) : (startLabel + '-' + endLabel);
+        container.querySelectorAll('.question-card').forEach(function(card, i) { card.classList.toggle('hidden', !isVisibleOnCurrentPage(i)); });
+        renderDots();
+        btnPrev.disabled = currentIndex === 0;
+        btnNext.disabled = currentIndex + QUESTIONS_PER_PAGE >= QUESTIONS.length;
+      }
+
+      function renderDots() {
+        var pageCount = getPageCount();
+        questionDots.innerHTML = Array.from({ length: pageCount }, function(_, page) {
+          var pageStart = page * QUESTIONS_PER_PAGE;
+          var pageEnd = Math.min(pageStart + QUESTIONS_PER_PAGE, QUESTIONS.length);
+          var answered = Array.from({ length: pageEnd - pageStart }, function(__, offset) { return isAnswered(pageStart + offset); }).some(Boolean);
+          var isCurrent = pageStart === currentIndex;
+          var cls = 'dot' + (isCurrent ? ' current' : '') + (answered ? ' answered' : '');
+          var startLabel = getQuestionLabel(pageStart);
+          var endLabel = getQuestionLabel(pageEnd - 1);
+          var label = (startLabel === endLabel) ? String(startLabel) : (startLabel + '-' + endLabel);
+          return '<button type="button" class="' + cls + '" data-index="' + pageStart + '">' + label + '</button>';
+        }).join('');
+        questionDots.querySelectorAll('.dot').forEach(function(btn) {
+          btn.addEventListener('click', function() { showQuestion(parseInt(btn.getAttribute('data-index'), 10)); });
+        });
+      }
+
+      function isAnswered(i) {
+        var q = QUESTIONS[i], u = userAnswers[i];
+        if (u === undefined) return false;
+        if (getQuestionKind(q) === 'dragdrop') return Array.isArray(u) && u.some(function(v) { return v != null; });
+        if (getQuestionKind(q) === 'multi') return Array.isArray(u) && u.length > 0;
+        return true;
+      }
+
+      function updateAnsweredCount() {
+        var count = QUESTIONS.reduce(function(n, _, i) { return n + (isAnswered(i) ? 1 : 0); }, 0);
+        answeredNumEl.textContent = count;
+      }
+
+      function isCorrectAnswer(q, user) {
+        var kind = getQuestionKind(q), correct = q.answer;
+        if (kind === 'dragdrop') {
+          var a = Array.isArray(user) ? user : [], b = Array.isArray(correct) ? correct : [];
+          return a.length === b.length && a.every(function(v, k) { return v === b[k]; });
+        }
+        if (kind === 'multi') {
+          var a = (user || []).slice().sort(function(a,b) { return a - b; }), b = correct.slice().sort(function(a,b) { return a - b; });
+          return a.length === b.length && a.every(function(v, k) { return v === b[k]; });
+        }
+        return user === correct;
+      }
+
+      function submitExam() {
+        submitted = true;
+        var total = QUESTIONS.length, correct = 0;
+        var wrongs = [];
+        QUESTIONS.forEach(function(q, i) {
+          if (isCorrectAnswer(q, userAnswers[i])) correct++;
+          else wrongs.push(i);
+        });
+        renderAllQuestions();
+        examArea.classList.add('hidden');
+        resultArea.classList.remove('hidden');
+        scoreText.textContent = correct + ' / ' + total;
+        var pct = total ? Math.round((correct / total) * 100) : 0;
+        scoreSummary.textContent = 'ได้ ' + pct + '% ' + (pct >= 60 ? 'ผ่าน' : 'ไม่ผ่าน');
+
+        wrongList.innerHTML = wrongs.map(function(i) { return renderWrongItem(i, QUESTIONS[i]); }).join('');
+        wrongArea.classList.toggle('hidden', wrongs.length === 0);
+        allCorrectArea.classList.toggle('hidden', wrongs.length !== 0);
+      }
+
+      function retry() {
+        submitted = false;
+        userAnswers = {};
+        currentIndex = 0;
+        examArea.classList.remove('hidden');
+        resultArea.classList.add('hidden');
+        wrongArea.classList.add('hidden');
+        allCorrectArea.classList.add('hidden');
+        wrongList.innerHTML = '';
+        init();
+      }
+
+      btnPrev.addEventListener('click', function() { showQuestion(currentIndex - QUESTIONS_PER_PAGE); });
+      btnNext.addEventListener('click', function() { showQuestion(currentIndex + QUESTIONS_PER_PAGE); });
+      btnSubmit.addEventListener('click', submitExam);
+      btnRetry.addEventListener('click', retry);
+
+      init();
+    })();
+  </script>
+</body>
+</html>
